@@ -24,31 +24,31 @@
 </script>
 <style>
   :root {
-    --bg: #f6f2e9;
-    --bg-2: #efe9da;
-    --card: #fdfbf6;
-    --line: #e6dec9;
-    --line-soft: #ede5d2;
-    --ink: #2a2620;
-    --ink-2: #4d4639;
-    --ink-3: #807968;
-    --ink-4: #a8a08c;
-    --accent: #6b8e6f;
-    --accent-2: #4f6b53;
-    --accent-soft: #e7ede4;
-    --accent-border: #c8d4c0;
-    --accent-strong: #3e5641;
-    --risk: #b87355;
-    --risk-soft: #f6ebe0;
-    --risk-border: #e3c8af;
-    --warn: #c89968;
-    --warn-soft: #f7eedb;
-    --warn-border: #e7d3a7;
-    --calm: #6a8caf;
-    --calm-soft: #e6edf3;
-    --lime: #8da868;
-    --hero-grad: linear-gradient(135deg, #3a4a3a 0%, #5d6d57 50%, #8aa28d 100%);
-    --hero-text: #fdfbf6;
+    --bg: #f8f1e6;
+    --bg-2: #f2e8d6;
+    --card: #fffaf2;
+    --line: #ecdfc8;
+    --line-soft: #f3e9d6;
+    --ink: #3a2f25;
+    --ink-2: #5c4d3c;
+    --ink-3: #8a7a64;
+    --ink-4: #b3a48b;
+    --accent: #e3935f;
+    --accent-2: #c46e3e;
+    --accent-soft: #fcefe1;
+    --accent-border: #f2d4b6;
+    --accent-strong: #a85a30;
+    --risk: #c4615a;
+    --risk-soft: #faeae6;
+    --risk-border: #ecc6bf;
+    --warn: #d9a45a;
+    --warn-soft: #fbf0da;
+    --warn-border: #ecd6a8;
+    --calm: #a98aa0;
+    --calm-soft: #f3eaf0;
+    --lime: #e2b76b;
+    --hero-grad: linear-gradient(135deg, #9c4f37 0%, #c97a4f 48%, #e8ab78 100%);
+    --hero-text: #fffaf2;
     --admin-accent: #10b981;
     --admin-accent-2: #047857;
   }
@@ -489,11 +489,11 @@
           </p>
         </div>
         <div class="flex items-center gap-4 text-[14px] flex-wrap">
-          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-emerald-500 w-4 h-4"><span data-show="employee">活動充実度</span><span data-show="admin">活力・活気</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-orange-500 w-4 h-4"><span data-show="employee">活動充実度</span><span data-show="admin">活力・活気</span></label>
           <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-rose-500 w-4 h-4"><span data-show="employee">休息の質</span><span data-show="admin">疲労感</span></label>
           <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-amber-500 w-4 h-4"><span data-show="employee">業務バランス</span><span data-show="admin">作業負荷</span></label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="accent-indigo-500 w-4 h-4"><span data-show="employee">はたらく歓び</span><span data-show="admin">プレゼンティーイズム</span></label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="accent-teal-500 w-4 h-4" data-show="employee"><span data-show="employee">休日回復度</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-purple-400 w-4 h-4"><span data-show="employee">はたらく歓び</span><span data-show="admin">プレゼンティーイズム</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-orange-300 w-4 h-4" data-show="employee"><span data-show="employee">休日回復度</span></label>
         </div>
       </div>
       <div class="h-[340px]"><canvas id="trendChart"></canvas></div>
@@ -1000,7 +1000,7 @@ const heatData = [
 
 const lvlMap = {
   good: { color: 'var(--accent)', bg: 'var(--accent-soft)', text: 'var(--accent-2)', labelE: 'うれしい', labelA: '良好' },
-  fair: { color: 'var(--lime)',   bg: '#f0fbe4',            text: '#5d7c2e',         labelE: 'まずまず', labelA: '概ね良好' },
+  fair: { color: 'var(--lime)',   bg: '#fcf2da',            text: '#a06a1f',         labelE: 'まずまず', labelA: '概ね良好' },
   warn: { color: 'var(--warn)',   bg: 'var(--warn-soft)',   text: 'var(--warn)',     labelE: 'いたわり', labelA: '注意' },
   risk: { color: 'var(--risk)',   bg: 'var(--risk-soft)',   text: 'var(--risk)',     labelE: '寄り添う', labelA: '要介入' },
 };
@@ -1074,11 +1074,11 @@ const trendChart = new Chart(trendCtx, {
   data: {
     labels: days,
     datasets: [
-      { data: clip(vitalityS),  borderColor: '#10b981', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
-      { data: clip(fatigueS),   borderColor: '#b87355', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
-      { data: clip(workloadS),  borderColor: '#c89968', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
-      { data: clip(presS),      borderColor: '#6a8caf', borderDash: [4, 4], tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false },
-      { data: clip(recoveryS),  borderColor: '#14b8a6', tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false, hidden: true },
+      { data: clip(vitalityS),  borderColor: '#e3935f', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(fatigueS),   borderColor: '#c4615a', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(workloadS),  borderColor: '#d9a45a', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(presS),      borderColor: '#a98aa0', borderDash: [4, 4], tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(recoveryS),  borderColor: '#dc9a6a', tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false, hidden: true },
     ],
   },
   options: {
@@ -1119,9 +1119,9 @@ const scatterChart = new Chart(scCtx, {
       label: r.dept,
       data: [{ x: r.vitality.v, y: r.fatigue.v, r: Math.max(10, Math.sqrt(r.head) * 2.4) }],
       backgroundColor:
-        r.fatigue.l === 'risk' ? 'rgba(184,115,85,0.7)' :
-        r.fatigue.l === 'warn' ? 'rgba(200,153,104,0.7)' :
-        r.fatigue.l === 'fair' ? 'rgba(141,168,104,0.7)' : 'rgba(107,142,111,0.75)',
+        r.fatigue.l === 'risk' ? 'rgba(196,97,90,0.72)' :
+        r.fatigue.l === 'warn' ? 'rgba(217,164,90,0.72)' :
+        r.fatigue.l === 'fair' ? 'rgba(226,183,107,0.72)' : 'rgba(227,147,95,0.78)',
       borderColor: '#ffffff',
       borderWidth: 2,
     })),
