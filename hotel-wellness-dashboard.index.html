@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>チームウェルネス・ダッシュボード｜はたらく人中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Shippori+Mincho:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          mincho: ['"Shippori Mincho"', 'serif'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root {
+    --bg: #f6f2e9;
+    --bg-2: #efe9da;
+    --card: #fdfbf6;
+    --line: #e6dec9;
+    --line-soft: #ede5d2;
+    --ink: #2a2620;
+    --ink-2: #4d4639;
+    --ink-3: #807968;
+    --ink-4: #a8a08c;
+    --accent: #6b8e6f;
+    --accent-2: #4f6b53;
+    --accent-soft: #e7ede4;
+    --accent-border: #c8d4c0;
+    --accent-strong: #3e5641;
+    --risk: #b87355;
+    --risk-soft: #f6ebe0;
+    --risk-border: #e3c8af;
+    --warn: #c89968;
+    --warn-soft: #f7eedb;
+    --warn-border: #e7d3a7;
+    --calm: #6a8caf;
+    --calm-soft: #e6edf3;
+    --lime: #8da868;
+    --hero-grad: linear-gradient(135deg, #3a4a3a 0%, #5d6d57 50%, #8aa28d 100%);
+    --hero-text: #fdfbf6;
+    --admin-accent: #10b981;
+    --admin-accent-2: #047857;
+  }
+  [data-mode="admin"] {
+    --bg: #fafafa;
+    --bg-2: #f1f5f9;
+    --card: #ffffff;
+    --line: #e5e7eb;
+    --line-soft: #f1f5f9;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --ink-3: #64748b;
+    --ink-4: #94a3b8;
+    --accent: #10b981;
+    --accent-2: #047857;
+    --accent-soft: #ecfdf5;
+    --accent-border: #a7f3d0;
+    --accent-strong: #064e3b;
+    --risk: #f43f5e;
+    --risk-soft: #fff1f2;
+    --risk-border: #fecdd3;
+    --warn: #f59e0b;
+    --warn-soft: #fffbeb;
+    --warn-border: #fde68a;
+    --calm: #6366f1;
+    --calm-soft: #eef2ff;
+    --lime: #84cc16;
+    --hero-grad: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --hero-text: #ffffff;
+  }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Outfit', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+    line-height: 1.55;
+    transition: background-color .3s ease, color .3s ease;
+  }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+  .mono-num { font-family: 'JetBrains Mono', monospace; }
+  [data-mode="employee"] [data-show="admin"]     { display: none !important; }
+  [data-mode="admin"]     [data-show="employee"] { display: none !important; }
+  .surface { background: var(--card); border-color: var(--line); }
+  .text-ink { color: var(--ink); }
+  .text-ink-2 { color: var(--ink-2); }
+  .text-ink-3 { color: var(--ink-3); }
+  .border-line { border-color: var(--line); }
+  .border-line-soft { border-color: var(--line-soft); }
+  .bg-soft { background: var(--line-soft); }
+  .kpi-accent { background: var(--accent-soft); color: var(--accent-2); }
+  .kpi-risk   { background: var(--risk-soft); color: var(--risk); }
+  .kpi-warn   { background: var(--warn-soft); color: var(--warn); }
+  .kpi-calm   { background: var(--calm-soft); color: var(--calm); }
+  .border-accent { border-color: var(--accent-border); }
+  .border-risk   { border-color: var(--risk-border); }
+  .border-warn   { border-color: var(--warn-border); }
+  .text-accent   { color: var(--accent-2); }
+  .text-risk     { color: var(--risk); }
+  .text-warn     { color: var(--warn); }
+  .text-calm     { color: var(--calm); }
+  .bg-accent-soft { background: var(--accent-soft); }
+  .bg-warn-soft   { background: var(--warn-soft); }
+  .bg-risk-soft   { background: var(--risk-soft); }
+  .bg-calm-soft   { background: var(--calm-soft); }
+  .bg-accent { background: var(--accent); }
+  .bg-risk   { background: var(--risk); }
+  .bg-warn   { background: var(--warn); }
+  .heat-cell { transition: transform .18s ease, box-shadow .18s ease; }
+  .heat-cell:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(40,30,15,.18); z-index: 5; position: relative; }
+  .kpi-bar { background: linear-gradient(90deg, var(--accent) var(--p, 60%), var(--line-soft) var(--p, 60%)); height: 10px; border-radius: 999px; }
+  .kpi-bar.calm { background: linear-gradient(90deg, var(--calm) var(--p, 60%), var(--line-soft) var(--p, 60%)); }
+  .mode-toggle { position: relative; display: inline-flex; background: var(--bg-2); border-radius: 999px; padding: 5px; gap: 2px; border: 1px solid var(--line); }
+  .mode-toggle button { position: relative; z-index: 2; padding: 10px 18px; font-size: 14px; font-weight: 500; color: var(--ink-3); border-radius: 999px; transition: color .2s ease; display:inline-flex; align-items:center; gap:8px; }
+  .mode-toggle button.active { color: white; }
+  .mode-toggle .pill { position: absolute; top: 5px; bottom: 5px; background: var(--accent); border-radius: 999px; transition: left .3s cubic-bezier(.5,.2,.3,1.1), width .3s cubic-bezier(.5,.2,.3,1.1); z-index: 1; }
+  [data-mode="admin"] .mode-toggle .pill { background: #0f172a; }
+  .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:13px; font-weight:500; }
+  .legend-dot { width:12px; height:12px; border-radius:999px; display:inline-block; }
+  .insight-hero { background: var(--hero-grad); color: var(--hero-text); }
+  .am-row { display:grid; grid-template-columns: 240px 1fr 1fr; gap: 24px; padding: 22px 24px; border-bottom: 1px solid var(--line-soft); align-items: start; }
+  .am-row:last-child { border-bottom: none; }
+  .am-row:hover { background: var(--line-soft); }
+  button { font-size: 14px; }
+  .btn-primary { padding: 12px 22px; font-size: 15px; font-weight: 600; border-radius: 12px; }
+  .btn-secondary { padding: 12px 22px; font-size: 15px; font-weight: 500; border-radius: 12px; }
+  .heat-label { font-size: 14px; }
+  .heat-value { font-size: 18px; font-weight: 600; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display:none; }
+</style>
+</head>
+<body data-mode="employee">
+
+<!-- ============== TOP BAR ============== -->
+<header class="surface border-b border-[var(--line)] sticky top-0 z-40 transition-colors">
+  <div class="max-w-[1480px] mx-auto px-6 md:px-10 py-4 flex items-center gap-6 flex-wrap">
+    <div class="flex items-center gap-4">
+      <div class="w-11 h-11 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-white">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+      </div>
+      <div>
+        <div class="text-[18px] font-semibold tracking-tight leading-none text-[var(--ink)]">
+          <span data-show="employee">チームウェルネス</span>
+          <span data-show="admin">Wellness Operations Console</span>
+        </div>
+        <div class="text-[13px] text-[var(--ink-3)] mt-1">
+          <span data-show="employee">歩行インソールから見える、みんなの元気</span>
+          <span data-show="admin">歩行インソール × 標準指標 統合コンソール</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="hidden lg:flex items-center gap-1 ml-2 text-[14px] font-medium text-[var(--ink-3)]">
+      <a class="px-4 py-2 rounded-lg bg-[var(--line-soft)] text-[var(--ink)]" data-show="employee">ようす</a>
+      <a class="px-4 py-2 rounded-lg bg-[var(--line-soft)] text-[var(--ink)]" data-show="admin">概要</a>
+      <a class="px-4 py-2 rounded-lg hover:bg-[var(--line-soft)]" data-show="employee">サポート</a>
+      <a class="px-4 py-2 rounded-lg hover:bg-[var(--line-soft)]" data-show="admin">部署別</a>
+      <a class="px-4 py-2 rounded-lg hover:bg-[var(--line-soft)]">レポート</a>
+      <a class="px-4 py-2 rounded-lg hover:bg-[var(--line-soft)]">設定</a>
+    </nav>
+
+    <div class="mode-toggle ml-auto" id="modeToggle">
+      <span class="pill" id="togglePill"></span>
+      <button data-mode-btn="employee" class="active">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        はたらく人 中心
+      </button>
+      <button data-mode-btn="admin">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>
+        管理者 詳細分析
+      </button>
+    </div>
+
+    <div class="flex items-center gap-3 ml-2">
+      <button class="btn-secondary surface border border-[var(--line)] hover:bg-[var(--line-soft)] text-[var(--ink-2)] flex items-center gap-2">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+        <span data-show="employee">今月</span>
+        <span data-show="admin">過去30日</span>
+      </button>
+      <div class="w-10 h-10 rounded-full bg-[var(--calm)] text-white flex items-center justify-center text-[14px] font-semibold">YS</div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1480px] mx-auto px-6 md:px-10 py-10 space-y-10">
+
+<!-- PRIVACY NOTE -->
+<section data-show="employee" class="rounded-2xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-6 py-4 flex items-start gap-4">
+  <div class="w-9 h-9 rounded-xl bg-white border border-[var(--accent-border)] flex items-center justify-center text-[var(--accent-2)] flex-shrink-0">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </div>
+  <div class="text-[15px] text-[var(--ink-2)] leading-relaxed">
+    <strong class="font-semibold text-[var(--ink)]">あなたのお名前は、どこにも表示されません。</strong>
+    ここで見えるのは、5人以上集まった<strong class="font-semibold text-[var(--ink)]">チーム全体の傾向</strong>だけです。インソールの着用はいつでも外せます。
+    <a class="text-[var(--accent-2)] font-medium underline underline-offset-2 cursor-pointer">プライバシーポリシー</a>
+  </div>
+</section>
+
+<!-- PAGE HEADER -->
+<section class="flex items-end justify-between gap-8 flex-wrap">
+  <div class="flex-1 min-w-[320px]">
+    <div class="flex items-center gap-2 text-[13px] text-[var(--ink-3)] mb-3">
+      <span>ホーム</span><span>›</span>
+      <span data-show="employee">チームウェルネス</span>
+      <span data-show="admin">ホテル従業員ウェルネス</span>
+      <span>›</span>
+      <span class="text-[var(--ink)]" data-show="employee">今月のようす</span>
+      <span class="text-[var(--ink)]" data-show="admin">概要</span>
+    </div>
+    <h1 class="text-[40px] font-bold tracking-tight leading-[1.15]">
+      <span data-show="employee">みんなの <span class="font-mincho text-[var(--accent-2)]">"いきいき"</span>、数字で見てみよう。</span>
+      <span data-show="admin">ホテル従業員ウェルネス概要 <span class="text-[var(--ink-3)] font-normal text-[24px]">| 2026年6月</span></span>
+    </h1>
+    <p class="text-[16px] text-[var(--ink-3)] mt-4 max-w-3xl leading-relaxed">
+      <span data-show="employee">歩行インソールから、106名のみなさまと6つのチームの<strong class="font-semibold text-[var(--ink-2)]">今月のようす</strong>を可視化しています。チームのみんなが、無理なくつながりを持って力を発揮できているか ― その手がかりがここにあります。</span>
+      <span data-show="admin">歩行インソールから得られる活動量・歩容データと、標準的なウェルネス指標（UWES・NASA-TLX・WHO-HPQ 等）を統合し、部署・シフト単位で状態を可視化しています。</span>
+    </p>
+  </div>
+  <div class="flex items-center gap-3 flex-wrap">
+    <button class="btn-secondary surface border border-[var(--line)] text-[var(--ink-2)] flex items-center gap-2 hover:bg-[var(--line-soft)]">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <span data-show="employee">データの根拠</span>
+      <span data-show="admin">データソース</span>
+    </button>
+    <button class="btn-primary bg-[var(--ink)] text-white flex items-center gap-2">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+      <span data-show="employee">サポート資料</span>
+      <span data-show="admin">レポート出力</span>
+    </button>
+  </div>
+</section>
+
+<!-- HERO KPI STRIP -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+
+  <div class="surface border border-[var(--line)] rounded-3xl p-6">
+    <div class="flex items-start justify-between mb-3">
+      <div class="text-[14px] uppercase tracking-wider text-[var(--ink-3)] font-semibold">
+        <span data-show="employee">活動充実度</span>
+        <span data-show="admin">活力・活気 スコア</span>
+      </div>
+      <div class="w-11 h-11 rounded-xl kpi-accent flex items-center justify-center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="employee">78</span>
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="admin">4.6</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="employee">%</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="admin">/ 7.0</span>
+    </div>
+    <div class="mt-3 text-[15px] text-[var(--ink-2)]">
+      <span data-show="employee">先月より <strong class="font-semibold text-[var(--accent-2)] num">+4.2pt</strong> 上がりました 🎉</span>
+      <span data-show="admin">前期比 <strong class="font-semibold text-[var(--accent-2)] num">+0.18</strong> (28日)</span>
+    </div>
+    <div class="mt-5">
+      <div class="flex items-center justify-between text-[13px] text-[var(--ink-3)] mb-2">
+        <span data-show="employee">心地よさライン</span>
+        <span data-show="admin">業界平均 4.1</span>
+        <span data-show="employee">目標 85%</span>
+        <span data-show="admin">目標 5.0</span>
+      </div>
+      <div class="kpi-bar" style="--p:78%"></div>
+    </div>
+  </div>
+
+  <div class="surface border border-[var(--line)] rounded-3xl p-6">
+    <div class="flex items-start justify-between mb-3">
+      <div class="text-[14px] uppercase tracking-wider text-[var(--ink-3)] font-semibold">
+        <span data-show="employee">休息の質</span>
+        <span data-show="admin">疲労感 スコア</span>
+      </div>
+      <div class="w-11 h-11 rounded-xl kpi-calm flex items-center justify-center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a8 8 0 0 0 8-8c0-5-8-12-8-12S4 9 4 14a8 8 0 0 0 8 8z"/><circle cx="12" cy="14" r="2"/></svg>
+      </div>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="employee">71</span>
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="admin">2.97</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="employee">% 余裕</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="admin">/ 5.0</span>
+    </div>
+    <div class="mt-3 text-[15px] text-[var(--ink-2)]">
+      <span data-show="employee">前月とほぼ同じ。少し回復傾向 <span class="text-[var(--accent-2)] font-semibold num">+0.8pt</span></span>
+      <span data-show="admin">中位帯 / 部署差は標準偏差 <strong class="font-semibold text-[var(--ink)] num">0.42</strong></span>
+    </div>
+    <div class="mt-5">
+      <div class="flex items-center justify-between text-[13px] text-[var(--ink-3)] mb-2">
+        <span data-show="employee">推奨レンジ 70%以上</span>
+        <span data-show="admin">注意帯 ≥ 3.5</span>
+        <span data-show="employee">目標 80%</span>
+        <span data-show="admin">要介入 ≥ 4.0</span>
+      </div>
+      <div class="kpi-bar calm" style="--p:71%; --c: var(--calm);"></div>
+    </div>
+  </div>
+
+  <div class="surface border border-[var(--line)] rounded-3xl p-6">
+    <div class="flex items-start justify-between mb-3">
+      <div class="text-[14px] uppercase tracking-wider text-[var(--ink-3)] font-semibold">
+        <span data-show="employee">休日回復度</span>
+        <span data-show="admin">リカバリ指数</span>
+      </div>
+      <div class="w-11 h-11 rounded-xl kpi-accent flex items-center justify-center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20"/><path d="M2 12h20"/></svg>
+      </div>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none">58</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium">% 回復</span>
+    </div>
+    <div class="mt-3 text-[15px] text-[var(--ink-2)]">
+      <span data-show="employee">お休みの日と働く日、活動パターンの差が <strong class="font-semibold text-[var(--ink)] num">58%</strong> ― もう少し休めてるサインがほしいかも</span>
+      <span data-show="admin">休日/就業日の指標差 58%。推奨 65%以上。</span>
+    </div>
+    <div class="mt-5">
+      <div class="flex items-center justify-between text-[13px] text-[var(--ink-3)] mb-2">
+        <span data-show="employee">推奨 65%以上</span>
+        <span data-show="admin">部署平均レンジ</span>
+        <span data-show="employee">目標 70%</span>
+        <span data-show="admin">業界 75%</span>
+      </div>
+      <div class="kpi-bar" style="--p:58%"></div>
+    </div>
+  </div>
+
+  <div class="surface border border-[var(--line)] rounded-3xl p-6">
+    <div class="flex items-start justify-between mb-3">
+      <div class="text-[14px] uppercase tracking-wider text-[var(--ink-3)] font-semibold">
+        <span data-show="employee">もっと働きがい</span>
+        <span data-show="admin">プレゼンティーイズム損失率</span>
+      </div>
+      <div class="w-11 h-11 rounded-xl kpi-warn flex items-center justify-center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      </div>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="employee">¥8.5</span>
+      <span class="text-[52px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="admin">22.4</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="employee">M 引き出せる</span>
+      <span class="text-[20px] text-[var(--ink-3)] font-medium" data-show="admin">% 損失</span>
+    </div>
+    <div class="mt-3 text-[15px] text-[var(--ink-2)]">
+      <span data-show="employee">サポート充実で、来年 <strong class="font-semibold text-[var(--accent-2)] num">¥8.5M</strong> みんなの働きがいが取り戻せる試算</span>
+      <span data-show="admin">推定年間損失 <strong class="font-semibold text-[var(--ink)] num">¥28.4M</strong> / 投資回収 <strong class="font-semibold num">4.2ヶ月</strong></span>
+    </div>
+    <div class="mt-5">
+      <div class="flex items-center justify-between text-[13px] text-[var(--ink-3)] mb-2">
+        <span data-show="employee">改善の余地</span>
+        <span data-show="admin">改善余地</span>
+        <span>¥8.5M / 年</span>
+      </div>
+      <div class="kpi-bar" style="--p:30%; --c: var(--calm);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ACTION MENU (Decision Map) -->
+<section class="surface border border-[var(--line)] rounded-3xl p-8">
+  <div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+    <div>
+      <h2 class="text-[24px] font-bold flex items-center gap-3">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--accent-2)]"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span data-show="employee">数字から見えること ― 私たちにできること</span>
+        <span data-show="admin">指標 → 意思決定マッピング</span>
+      </h2>
+      <p class="text-[15px] text-[var(--ink-3)] mt-2">
+        <span data-show="employee">各指標が示すチームの状態と、私たちから差し出せるサポートを一覧にしました。気になるものがあれば、明日から小さく始められます。</span>
+        <span data-show="admin">各指標がどの経営判断に関与し、現場レベルの打ち手にどう繋がるかを示します。</span>
+      </p>
+    </div>
+    <div class="text-[13px] text-[var(--ink-3)] flex items-center gap-2 flex-wrap">
+      <span data-show="employee">指標の算出:</span>
+      <span data-show="admin">指標出典:</span>
+      <span class="chip border border-[var(--line)]">活動量</span>
+      <span class="chip border border-[var(--line)]">歩容パターン</span>
+      <span class="chip border border-[var(--line)]">休日/就業日差</span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto scrollbar-thin">
+    <div class="min-w-[920px]">
+      <div class="grid grid-cols-[240px_1fr_1fr] gap-6 px-6 py-3 text-[13px] uppercase tracking-wider font-semibold text-[var(--ink-3)] border-b border-[var(--line-soft)]">
+        <div><span data-show="employee">数字から見えること</span><span data-show="admin">指標</span></div>
+        <div><span data-show="employee">私たちから差し出せるサポート</span><span data-show="admin">経営判断への活用</span></div>
+        <div><span data-show="employee">明日からの小さな一歩</span><span data-show="admin">現場の打ち手</span></div>
+      </div>
+      <div id="decisionRows"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN GRID -->
+<section class="grid grid-cols-12 gap-6">
+
+  <!-- LEFT COLUMN -->
+  <div class="col-span-12 xl:col-span-8 space-y-6">
+
+    <!-- Team x Indicator Matrix -->
+    <div class="surface border border-[var(--line)] rounded-3xl p-7">
+      <div class="flex items-start justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h2 class="text-[24px] font-bold flex items-center gap-3">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--accent-2)]"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span data-show="employee">チーム × 元気度 マトリクス</span>
+            <span data-show="admin">部署 × 指標 マトリクス</span>
+          </h2>
+          <p class="text-[15px] text-[var(--ink-3)] mt-2">
+            <span data-show="employee">チームごとのようすを一目で。色と数値が大きいほど「うれしい」、赤っぽいほど「いたわり」が要ります。</span>
+            <span data-show="admin">セルをタップで該当部署・指標の詳細を表示します</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-1 text-[13px] text-[var(--ink-3)]">
+          <button class="px-3 py-1.5 rounded-lg bg-[var(--ink)] text-white" data-show="employee">チーム平均</button>
+          <button class="px-3 py-1.5 rounded-lg border border-[var(--line)] hover:bg-[var(--line-soft)]" data-show="employee">時間帯別</button>
+          <button class="px-3 py-1.5 rounded-lg bg-[var(--ink)] text-white" data-show="admin">部署平均</button>
+          <button class="px-3 py-1.5 rounded-lg border border-[var(--line)] hover:bg-[var(--line-soft)]" data-show="admin">部署×性別</button>
+          <button class="px-3 py-1.5 rounded-lg border border-[var(--line)] hover:bg-[var(--line-soft)]" data-show="admin">シフト別</button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto scrollbar-thin">
+        <div class="min-w-[920px]">
+          <div class="grid grid-cols-[180px_repeat(6,1fr)] gap-2 text-[14px] font-medium text-[var(--ink-3)] mb-3">
+            <div></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">活動充実度</span><span data-show="admin">活力・活気</span></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">休息の質</span><span data-show="admin">疲労感</span></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">はたらく歓び</span><span data-show="admin">プレゼンティーイズム</span></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">休日回復度</span><span data-show="admin">リカバリ</span></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">業務バランス</span><span data-show="admin">作業負荷</span></div>
+            <div class="px-3 py-2 text-center heat-label"><span data-show="employee">チームワーク</span><span data-show="admin">ワークエンゲージメント</span></div>
+          </div>
+          <div id="heat-rows" class="space-y-2 text-[14px]"></div>
+          <div class="grid grid-cols-[180px_repeat(6,1fr)] gap-2 mt-4 pt-4 border-t border-[var(--line-soft)] text-[15px] font-semibold">
+            <div class="flex items-center text-[var(--ink-3)] text-[13px]"><span data-show="employee">みんな平均</span><span data-show="admin">施設平均</span></div>
+            <div class="rounded-xl kpi-accent flex items-center justify-between px-4 py-3.5"><span class="heat-value" data-show="employee">78%</span><span class="heat-value" data-show="admin">4.6</span><span class="text-[12px] opacity-80 font-medium" data-show="employee">うれしい</span><span class="text-[12px] opacity-80 font-medium" data-show="admin">良好</span></div>
+            <div class="rounded-xl kpi-warn flex items-center justify-between px-4 py-3.5"><span class="heat-value">71%</span><span class="text-[12px] opacity-80 font-medium">いたわり</span></div>
+            <div class="rounded-xl kpi-warn flex items-center justify-between px-4 py-3.5"><span class="heat-value">78%</span><span class="text-[12px] opacity-80 font-medium">いたわり</span></div>
+            <div class="rounded-xl kpi-warn flex items-center justify-between px-4 py-3.5"><span class="heat-value">58%</span><span class="text-[12px] opacity-80 font-medium">いたわり</span></div>
+            <div class="rounded-xl kpi-warn flex items-center justify-between px-4 py-3.5"><span class="heat-value">57%</span><span class="text-[12px] opacity-80 font-medium">いたわり</span></div>
+            <div class="rounded-xl kpi-accent flex items-center justify-between px-4 py-3.5"><span class="heat-value">4.1</span><span class="text-[12px] opacity-80 font-medium">うれしい</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-5 border-t border-[var(--line-soft)] grid grid-cols-3 gap-4 text-[14px]">
+        <div class="flex items-start gap-2.5">
+          <span class="legend-dot bg-[var(--accent)] mt-1.5"></span>
+          <span class="text-[var(--ink-2)]"><span data-show="employee"><strong class="font-semibold text-[var(--ink)]">うれしい</strong> ― 今の状態が持続可能なチーム。</span><span data-show="admin"><strong class="font-semibold text-[var(--ink)]">良好</strong> ― 部署平均 ≥ 業界P50。</span></span>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="legend-dot bg-[var(--warn)] mt-1.5"></span>
+          <span class="text-[var(--ink-2)]"><span data-show="employee"><strong class="font-semibold text-[var(--ink)]">いたわり</strong> ― もう一息、休息と業務調整が必要なチーム。</span><span data-show="admin"><strong class="font-semibold text-[var(--ink)]">注意</strong> ― 疲労蓄積・作業負荷が閾値超過。</span></span>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="legend-dot bg-[var(--risk)] mt-1.5"></span>
+          <span class="text-[var(--ink-2)]"><span data-show="employee"><strong class="font-semibold text-[var(--ink)]">寄り添う</strong> ― 個別のお声がけ・専門家連携の準備。</span><span data-show="admin"><strong class="font-semibold text-[var(--ink)]">要介入</strong> ― 個別面談・シフト調整の対象。</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time Series -->
+    <div class="surface border border-[var(--line)] rounded-3xl p-7">
+      <div class="flex items-start justify-between mb-5 flex-wrap gap-3">
+        <div>
+          <h2 class="text-[24px] font-bold flex items-center gap-3">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--accent-2)]"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 4 5-5"/></svg>
+            <span data-show="employee">この1ヶ月の、チームのようす</span>
+            <span data-show="admin">主要指標 30日推移</span>
+          </h2>
+          <p class="text-[15px] text-[var(--ink-3)] mt-2">
+            <span data-show="employee">4つの指標がどう動いたか、0–100 の偏差値で表示しています。週末やお祝いの日が見えてきます。</span>
+            <span data-show="admin">施設全体 / 0–100 正規化値（各指標を偏差値換算）</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-4 text-[14px] flex-wrap">
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-emerald-500 w-4 h-4"><span data-show="employee">活動充実度</span><span data-show="admin">活力・活気</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-rose-500 w-4 h-4"><span data-show="employee">休息の質</span><span data-show="admin">疲労感</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-amber-500 w-4 h-4"><span data-show="employee">業務バランス</span><span data-show="admin">作業負荷</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-indigo-500 w-4 h-4"><span data-show="employee">はたらく歓び</span><span data-show="admin">プレゼンティーイズム</span></label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="accent-teal-500 w-4 h-4" data-show="employee"><span data-show="employee">休日回復度</span></label>
+        </div>
+      </div>
+      <div class="h-[340px]"><canvas id="trendChart"></canvas></div>
+
+      <div class="mt-5 pt-5 border-t border-[var(--line-soft)] grid grid-cols-3 gap-5 text-[14px]">
+        <div class="flex items-start gap-3">
+          <span class="legend-dot bg-[var(--accent)] mt-1.5 flex-shrink-0"></span>
+          <div>
+            <div class="text-[var(--ink)] font-semibold" data-show="employee">6/14 ― 笑顔の土曜日</div>
+            <div class="text-[var(--ink)] font-semibold" data-show="admin">6/14 土曜</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">フロントのいきいき度がぐっと上がった日。チェックインの波をみんなで乗り越えました</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">チェックイン集中日。活気スコア +4.2pt上昇（フロント繁忙相関）</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="legend-dot bg-[var(--warn)] mt-1.5 flex-shrink-0"></span>
+          <div>
+            <div class="text-[var(--ink)] font-semibold" data-show="employee">6/21 ― みんなで乗り切った日</div>
+            <div class="text-[var(--ink)] font-semibold" data-show="admin">6/21 土曜</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">修学旅行団が来館。客室清掃チームが頑張ってくれました ― 応援レター送りました</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">修学旅行団チェックイン。客室清掃の作業負荷 +11pt 要因</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="legend-dot bg-[var(--risk)] mt-1.5 flex-shrink-0"></span>
+          <div>
+            <div class="text-[var(--ink)] font-semibold" data-show="employee">6/24 ― 調理チームをいたわる日</div>
+            <div class="text-[var(--ink)] font-semibold" data-show="admin">6/24 火曜</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">調理チームが13日連続がんばり期間。配置サポートを検討中です</div>
+            <div class="text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">調理部門で連続高負荷13日目。疲労スコア閾値超過</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scatter -->
+    <div class="surface border border-[var(--line)] rounded-3xl p-7">
+      <div class="flex items-start justify-between mb-5 flex-wrap gap-3">
+        <div>
+          <h2 class="text-[24px] font-bold flex items-center gap-3">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--accent-2)]"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20"/><path d="M2 12h20"/></svg>
+            <span data-show="employee">いきいき × ゆとり チームマップ</span>
+            <span data-show="admin">活力・活気 × 疲労感 部署マップ</span>
+          </h2>
+          <p class="text-[15px] text-[var(--ink-3)] mt-2">
+            <span data-show="employee">右上ほど「いきいき × ゆとり」両方を保てているチーム。円の大きさは人数。</span>
+            <span data-show="admin">右上ほど理想（高活気 × 低疲労）/ 円の大きさは従業員数</span>
+          </p>
+        </div>
+        <div class="text-[14px] text-[var(--ink-3)]">
+          <span data-show="employee">相関 r = <span class="mono-num text-[var(--ink)] font-semibold">−0.78</span>（強い関係）</span>
+          <span data-show="admin">相関係数 r = <span class="mono-num text-[var(--ink)] font-semibold">−0.78</span></span>
+        </div>
+      </div>
+      <div class="grid grid-cols-12 gap-6">
+        <div class="col-span-7 h-[340px]"><canvas id="scatterChart"></canvas></div>
+        <div class="col-span-5 space-y-3 text-[14px]">
+          <div class="rounded-2xl bg-accent-soft border border-[var(--accent-border)] p-4">
+            <div class="font-semibold text-[var(--accent-2)] text-[15px] flex items-center gap-2">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span data-show="employee">うれしい象限</span><span data-show="admin">高パフォーマンス象限</span>
+            </div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="employee">フロント・ベル・バックオフィスのお互いさまの工夫を、チーム横断で共有しましょう</div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="admin">フロント / ベル / バックオフィス ― ベストプラクティスの横展開候補</div>
+          </div>
+          <div class="rounded-2xl bg-warn-soft border border-[var(--warn-border)] p-4">
+            <div class="font-semibold text-[var(--warn)] text-[15px] flex items-center gap-2">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              <span data-show="employee">そっと寄り添う象限</span><span data-show="admin">要介入象限</span>
+            </div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="employee">調理・客室清掃のみなさまへ、業務分担と休息機会のご提案を</div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="admin">調理 / 客室清掃 ― 作業負荷の源泉分析と配置見直しを推奨</div>
+          </div>
+          <div class="rounded-2xl bg-[var(--line-soft)] border border-[var(--line)] p-4">
+            <div class="font-semibold text-[var(--ink-2)] text-[15px] flex items-center gap-2">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/></svg>
+              <span data-show="employee">なるほどメモ</span><span data-show="admin">解釈メモ</span>
+            </div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="employee">活動量とこころのゆとりには深い関係（−0.62）。お休みの質を見直すと、みんなの元気度が上がります</div>
+            <div class="text-[var(--ink-2)] mt-1.5 leading-relaxed" data-show="admin">歩数データと疲労感スコアに有意な負相関（−0.62）。休息確保の重要指標。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="col-span-12 xl:col-span-4 space-y-6">
+
+    <!-- Support Opportunities -->
+    <div class="surface border border-[var(--line)] rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-[20px] font-bold flex items-center gap-3">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--risk)]"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <span data-show="employee">お声がけ・サポートのきっかけ</span>
+          <span data-show="admin">注意アラート</span>
+        </h2>
+        <span class="chip bg-risk-soft text-[var(--risk)] border border-[var(--risk-border)]" data-show="employee">5 チーム</span>
+        <span class="chip bg-risk-soft text-[var(--risk)]" data-show="admin">5 件</span>
+      </div>
+
+      <div class="space-y-3">
+        <div class="relative rounded-2xl border border-[var(--risk-border)] bg-risk-soft p-4 pl-5">
+          <div class="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--risk)] rounded-r"></div>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="employee">調理チーム 仕込み帯の連続がんばり</div>
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="admin">調理・仕込みシフト 連続高負荷</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">13日連続、がんばり期間がつづいています。ピーク時間の応援を。</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">作業負荷 72 / 疲労 3.8 — 13日連続閾値超過</div>
+            </div>
+            <span class="chip bg-[var(--risk)] text-white text-[12px]" data-show="employee">優先</span>
+            <span class="chip bg-[var(--risk)] text-white text-[12px]" data-show="admin">高</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[13px]">
+            <span class="text-[var(--ink-3)]" data-show="employee">14名のチーム</span>
+            <span class="text-[var(--ink-3)]" data-show="admin">対象 14名</span>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="employee">応援を組む</button>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="admin">対応指示</button>
+          </div>
+        </div>
+
+        <div class="relative rounded-2xl border border-[var(--warn-border)] bg-warn-soft p-4 pl-5">
+          <div class="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--warn)] rounded-r"></div>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="employee">客室清掃B班 休息の時間を</div>
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="admin">客室清掃B班 疲労蓄積</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">B班のみなさま、ちょっとお疲れ気味。連続勤務の見直しのご提案を。</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">自覚症しらべ 平均 4.2 / 5.0（部署内最高）</div>
+            </div>
+            <span class="chip border border-[var(--warn-border)] text-[var(--warn)] bg-white text-[12px]" data-show="employee">ご一緒に</span>
+            <span class="chip bg-[var(--warn)] text-white text-[12px]" data-show="admin">中</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[13px]">
+            <span class="text-[var(--ink-3)]" data-show="employee">11名のチーム</span>
+            <span class="text-[var(--ink-3)]" data-show="admin">対象 11名</span>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="employee">お休みをプレゼント</button>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="admin">シフト確認</button>
+          </div>
+        </div>
+
+        <div class="relative rounded-2xl border border-[var(--warn-border)] bg-warn-soft p-4 pl-5">
+          <div class="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--warn)] rounded-r"></div>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="employee">レストラン 週末のピーク</div>
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="admin">レストラン週末帯 負荷スパイク</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">週末のご来店増し、4週つづいています。応援募集のご連絡を。</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">NASA-TLX +14pt / 4週連続</div>
+            </div>
+            <span class="chip border border-[var(--warn-border)] text-[var(--warn)] bg-white text-[12px]" data-show="employee">ご一緒に</span>
+            <span class="chip bg-[var(--warn)] text-white text-[12px]" data-show="admin">中</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[13px]">
+            <span class="text-[var(--ink-3)]" data-show="employee">8名のチーム</span>
+            <span class="text-[var(--ink-3)]" data-show="admin">対象 8名</span>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="employee">応援を募集</button>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="admin">人員検討</button>
+          </div>
+        </div>
+
+        <div class="relative rounded-2xl border border-[var(--line)] bg-[var(--line-soft)] p-4 pl-5">
+          <div class="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--ink-4)] rounded-r"></div>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="employee">フロント夜勤帯 ゆっくりご相談を</div>
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="admin">フロント夜勤帯 活気低下</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">この2週間、夜勤のみなさまが少しお疲れのようです。</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">過去14日 −0.42pt トレンド</div>
+            </div>
+            <span class="chip border border-[var(--line)] text-[var(--ink-3)] bg-white text-[12px]" data-show="employee">お声がけ</span>
+            <span class="chip border border-[var(--line)] text-[var(--ink-3)] text-[12px]" data-show="admin">低</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[13px]">
+            <span class="text-[var(--ink-3)]" data-show="employee">6名のチーム</span>
+            <span class="text-[var(--ink-3)]" data-show="admin">対象 6名</span>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="employee">1on1 を予約</button>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="admin">面談予約</button>
+          </div>
+        </div>
+
+        <div class="relative rounded-2xl border border-[var(--line)] bg-[var(--line-soft)] p-4 pl-5">
+          <div class="absolute left-0 top-3 bottom-3 w-1.5 bg-[var(--ink-4)] rounded-r"></div>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="employee">着用がお休み気味のみなさま</div>
+              <div class="text-[15px] font-semibold text-[var(--ink)]" data-show="admin">インソール未装着者</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="employee">6名 ― 充電切れのご確認、ご挨拶周りに向かいましょう</div>
+              <div class="text-[13px] text-[var(--ink-3)] mt-1 leading-relaxed" data-show="admin">6名 ― データ欠損のため要確認</div>
+            </div>
+            <span class="chip border border-[var(--line)] text-[var(--ink-3)] bg-white text-[12px]" data-show="employee">ひと言</span>
+            <span class="chip border border-[var(--line)] text-[var(--ink-3)] text-[12px]" data-show="admin">情報</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[13px]">
+            <span class="text-[var(--ink-3)]" data-show="employee">最終装着 &gt; 7日前</span>
+            <span class="text-[var(--ink-3)]" data-show="admin">最終装着 &gt; 7日前</span>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="employee">ご挨拶周り</button>
+            <button class="ml-auto btn-secondary bg-white border border-[var(--line)] text-[var(--ink-2)] py-1.5 px-3 hover:bg-[var(--line-soft)]" data-show="admin">一覧表示</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opportunity Panel -->
+    <div class="surface border border-[var(--line)] rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-[20px] font-bold flex items-center gap-3">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--calm)]"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+          <span data-show="employee">もっと働きがいを引き出すために</span>
+          <span data-show="admin">プレゼンティーイズム影響額</span>
+        </h2>
+      </div>
+
+      <div class="rounded-2xl p-5" style="background: linear-gradient(135deg, var(--calm-soft), var(--card)); border: 1px solid var(--line);">
+        <div class="text-[13px] text-[var(--ink-3)] uppercase tracking-wider font-semibold" data-show="employee">いまある、もっと働きがいを引き出す余地</div>
+        <div class="text-[13px] text-[var(--ink-3)] uppercase tracking-wider font-semibold" data-show="admin">年間推定損失（現状）</div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-[44px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="employee">¥8.5M</span>
+          <span class="text-[44px] font-bold tracking-tight num text-[var(--ink)] leading-none" data-show="admin">¥28.4M</span>
+          <span class="text-[16px] text-[var(--ink-3)] font-medium" data-show="employee">/ 年 取り戻せる</span>
+          <span class="text-[16px] text-[var(--ink-3)] font-medium" data-show="admin">/ 年</span>
+        </div>
+        <div class="mt-3 text-[13px] text-[var(--ink-3)] leading-relaxed" data-show="employee">先行事例より: サポートを充実させると、歓び度が上がり、離職も減る傾向</div>
+        <div class="mt-3 text-[13px] text-[var(--ink-3)] leading-relaxed" data-show="admin">計算式: 106名 × 平均年収 ¥4.2M × 22.4% 損失率</div>
+      </div>
+
+      <div class="mt-4 space-y-2.5 text-[14px]">
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">客室清掃チーム</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">客室清掃</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--risk)]" style="width:38%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥3.2M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥10.8M</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">調理チーム</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">調理</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--risk)]" style="width:24%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥2.0M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥6.8M</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">レストラン</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">レストラン</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--warn)]" style="width:19%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥1.5M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥5.4M</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">バックオフィス</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">バックオフィス</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--warn)]" style="width:9%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥0.8M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥2.5M</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">フロント</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">フロント</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--accent)]" style="width:6%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥0.6M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥1.7M</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-[var(--ink-2)]" data-show="employee">ベル</span>
+          <span class="text-[var(--ink-2)]" data-show="admin">ベル</span>
+          <div class="flex items-center gap-3 flex-1 mx-3 max-w-[180px]">
+            <div class="flex-1 h-2 bg-[var(--line-soft)] rounded-full overflow-hidden"><div class="h-full bg-[var(--accent)]" style="width:4%"></div></div>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="employee">+¥0.4M</span>
+            <span class="mono-num text-[var(--ink)] font-semibold w-16 text-right text-[14px]" data-show="admin">¥1.2M</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 pt-4 border-t border-[var(--line-soft)] rounded-2xl p-4 bg-accent-soft border border-[var(--accent-border)]">
+        <div class="text-[13px] text-[var(--accent-2)] font-semibold flex items-center gap-2">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <span data-show="employee">サポート充実で、見えてくるもの</span>
+          <span data-show="admin">介入時の改善余地</span>
+        </div>
+        <div class="text-[14px] text-[var(--ink-2)] mt-1.5 leading-relaxed">
+          <span data-show="employee">先行事例では、サポートを充実させることで <strong class="font-semibold num">¥8.5M / 年</strong> の働きがい向上が見られる傾向。投資回収 <strong class="font-semibold num">4.2ヶ月</strong>。</span>
+          <span data-show="admin">先行事例では類似環境で <strong class="font-semibold num">¥8.5M / 年</strong>（損失 −30%）の改善余地。投資回収 <strong class="font-semibold num">4.2ヶ月</strong>。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Support Menu -->
+    <div class="insight-hero rounded-3xl p-6 shadow-lift">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+        </div>
+        <h2 class="text-[20px] font-bold">
+          <span data-show="employee">おすすめサポート・メニュー</span>
+          <span data-show="admin">AIインサイト・推奨アクション</span>
+        </h2>
+      </div>
+
+      <div class="space-y-3">
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="chip bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30" data-show="employee">おすすめ</span>
+            <span class="chip bg-[var(--risk)]/20 text-[var(--risk)] border border-[var(--risk)]/30" data-show="admin">優先度 高</span>
+            <span class="text-[12px] text-white/70" data-show="employee">歓び度 +8pt 期待</span>
+            <span class="text-[12px] text-white/70" data-show="admin">推定効果: ¥6.8M / 年</span>
+          </div>
+          <div class="text-[16px] font-semibold mt-1" data-show="employee">調理チームに、仕込み時間の応援を</div>
+          <div class="text-[16px] font-semibold mt-1" data-show="admin">調理部門のピーク時人員を再配置</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="employee">5:00–8:00 の仕込み時間帯に、他チームから2名の応援。調理チームのみなさまのこころと時間にゆとりが生まれます。</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="admin">仕込み時間帯（5:00–8:00）に他部署から2名配置替え。NASA-TLX −8pt 想定。</div>
+          <button class="mt-3 text-[14px] font-semibold text-[var(--accent)] flex items-center gap-1.5">
+            <span data-show="employee">応援シフトを組む</span>
+            <span data-show="admin">アクションを作成</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="chip bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30" data-show="employee">おすすめ</span>
+            <span class="chip bg-[var(--warn)]/20 text-[var(--warn)] border border-[var(--warn)]/30" data-show="admin">優先度 中</span>
+            <span class="text-[12px] text-white/70" data-show="employee">歓び度 +5pt 期待</span>
+            <span class="text-[12px] text-white/70" data-show="admin">推定効果: ¥3.2M / 年</span>
+          </div>
+          <div class="text-[16px] font-semibold mt-1" data-show="employee">B班のみなさまへ 連休プレゼント</div>
+          <div class="text-[16px] font-semibold mt-1" data-show="admin">客室清掃B班 シフト間隔の調整</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="employee">連続4日勤務で必ず1日お休みを。4週連続3連休も企画してみましょう。</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="admin">連続勤務上限を5日→4日に。疲労蓄積スコア −0.6pt 想定。</div>
+          <button class="mt-3 text-[14px] font-semibold text-[var(--accent)] flex items-center gap-1.5">
+            <span data-show="employee">お休みカレンダーを提案</span>
+            <span data-show="admin">アクションを作成</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="chip bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30" data-show="employee">みんなで共有</span>
+            <span class="chip bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30" data-show="admin">横展開</span>
+            <span class="text-[12px] text-white/70" data-show="employee">うれしい工夫</span>
+            <span class="text-[12px] text-white/70" data-show="admin">ベストプラクティス</span>
+          </div>
+          <div class="text-[16px] font-semibold mt-1" data-show="employee">フロント・ベルさんの朝礼を共有</div>
+          <div class="text-[16px] font-semibold mt-1" data-show="admin">フロント・ベル式の朝礼プログラム展開</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="employee">いきいき度が高いフロント・ベルさんの朝礼を動画に。他チームでもやってみたくなりますね。</div>
+          <div class="text-[13px] text-white/70 mt-1.5 leading-relaxed" data-show="admin">高活気維持の要因分析。他部署でも導入余地あり。</div>
+          <button class="mt-3 text-[14px] font-semibold text-[var(--accent)] flex items-center gap-1.5">
+            <span data-show="employee">動画を見る</span>
+            <span data-show="admin">詳細を見る</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="pt-6 pb-16 text-[13px] text-[var(--ink-3)] flex flex-wrap items-start gap-6 border-t border-[var(--line-soft)]">
+  <div class="flex items-start gap-3 flex-1 min-w-[300px]">
+    <div class="w-9 h-9 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-[var(--accent-2)] flex-shrink-0">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <div class="text-[14px] font-semibold text-[var(--ink)]" data-show="employee">データの透明性</div>
+      <div class="text-[14px] font-semibold text-[var(--ink)]" data-show="admin">データソース</div>
+      <div class="mt-1.5 leading-relaxed">
+        <span data-show="employee">ここで見える数値は、すべて <strong class="font-semibold text-[var(--ink-2)]">歩行インソールから客観的に計測</strong> された活動データから算出しています。アンケート回答や個人の主観評価は使っていません。着用はいつでも外せます。</span>
+        <span data-show="admin">歩行インソールから得られる活動量・歩容データと、標準的なウェルネス指標（UWES・NASA-TLX・WHO-HPQ 等）を統合。心理尺度はインソールデータから非観測的に推定しています。</span>
+      </div>
+    </div>
+  </div>
+
+  <details class="text-[13px]">
+    <summary class="text-[var(--accent-2)] font-medium cursor-pointer hover:underline">指標の根拠・アルゴリズム</summary>
+    <div class="mt-3 space-y-1.5 text-[var(--ink-3)] leading-relaxed">
+      <div>・ 活動充実度: 活動量 × 歩行動作の安定性（<strong>UWES活気下位尺度</strong>相当を歩容から推定）</div>
+      <div>・ 休息の質: 歩行パターンの日差・活動継続時間（<strong>自覚症しらべ・疲労VAS</strong>相当を推定）</div>
+      <div>・ はたらく歓び: 業務中の歩容効率・協働動作パターン（<strong>WHO-HPQ</strong>相当を推定）</div>
+      <div>・ 休日回復度: 休日/就業日の指標差（客観的差分）</div>
+      <div>・ 業務バランス: 業務中の動作多様性 × 休憩間隔（<strong>Raw-NASA-TLX</strong>相当を推定）</div>
+      <div>・ チームワーク: チーム内の動きの同期性（<strong>UWES総合</strong>相当を推定）</div>
+      <div class="mt-2 text-[var(--ink-4)]">※ 各指標は歩行インソールデータからの推定値です。個別の臨床判断には適しません。</div>
+    </div>
+  </details>
+</footer>
+
+</main>
+
+<script>
+const root = document.body;
+const toggleBtns = document.querySelectorAll('[data-mode-btn]');
+const pill = document.getElementById('togglePill');
+
+function setPill() {
+  const active = document.querySelector('[data-mode-btn].active');
+  if (!active || !pill) return;
+  const r = active.getBoundingClientRect();
+  const tr = active.parentElement.getBoundingClientRect();
+  pill.style.left = (r.left - tr.left) + 'px';
+  pill.style.width = r.width + 'px';
+}
+
+function applyMode(mode) {
+  root.setAttribute('data-mode', mode);
+  toggleBtns.forEach(b => b.classList.toggle('active', b.dataset.modeBtn === mode));
+  setPill();
+  updateChartLabels(mode);
+  updateScatterTitles(mode);
+}
+
+toggleBtns.forEach(btn => btn.addEventListener('click', () => applyMode(btn.dataset.modeBtn)));
+window.addEventListener('load', setPill);
+window.addEventListener('resize', setPill);
+
+const decisionData = [
+  { key: 'vitality',
+    label: { employee: '活動充実度が上がってきた', admin: '活力・活気' },
+    sub:   { employee: '活動量 × 歩容の安定性', admin: 'UWES活気下位尺度・活力VAS相当' },
+    dec:   { employee: ['リフレッシュ空間の設置', '称賛の場の定期開催', '1on1 でのキャリア対話'],
+             admin:    ['採用計画の妥当性検証', '配置転換・キャリア面談', '研修・育成投資の優先度決定'] },
+    act:   { employee: ['15分のリフレッシュタイム導入', '週1の Good & New 共有', 'チーム内メンター制度'],
+             admin:    ['休憩プログラムの拡充', '称賛・表彰制度の見直し', 'キャリア開発面談（四半期）'] } },
+  { key: 'fatigue',
+    label: { employee: 'こころとからだの余裕がほしい', admin: '疲労感' },
+    sub:   { employee: '歩行パターンの日差から', admin: '自覚症しらべ・疲労VAS相当' },
+    dec:   { employee: ['勤務間インターバルの確保', 'リフレッシュデーの設定', '専門家相談窓口のご案内'],
+             admin:    ['シフト設計・人員計画', '産業医・保健師連携の要否', '安全衛生委員会での対応検討'] },
+    act:   { employee: ['お誕生日休暇のプレゼント', '週末前の「おつかれさま」day', '週次1on1 で気持ちをヒアリング'],
+             admin:    ['連続勤務上限 5日→4日', '週末前の休息確保', '産業医面談の対象抽出'] } },
+  { key: 'pres',
+    label: { employee: 'はたらく歓びをもっと高めたい', admin: 'プレゼンティーイズム' },
+    sub:   { employee: '歩容効率 × 協働パターンから', admin: 'WHO-HPQ相当' },
+    dec:   { employee: ['業務フロー改善プロジェクト', '心理的安全性ワークショップ', '社内表彰の拡充'],
+             admin:    ['業務プロセス改善の投資判断', '健康投資 ROI の算定', '組織開発のテーマ選定'] },
+    act:   { employee: ['「ありがとう」カードの運用', '小さな成功を毎月みんなで祝う', '心理的安全性ゲームで練習'],
+             admin:    ['業務標準化・マニュアル整備', 'ITツール導入による負荷軽減', '心理的安全性サーベイ実施'] } },
+  { key: 'recovery',
+    label: { employee: '休日にもっと回復したい', admin: 'リカバリ' },
+    sub:   { employee: '休日と就業日の活動差', admin: '休日/就業日の客観差分' },
+    dec:   { employee: ['計画年休の「ついで」取得', '3連休・4連休プレゼント', '休日の過ごし方ガイド'],
+             admin:    ['計画年休取得率の目標設定', '勤務間インターバル規制', '長期休暇取得の推奨'] },
+    act:   { employee: ['月に1度の「お互いデー」', '睡眠と運動のミニプログラム', '家族参加イベントの開催'],
+             admin:    ['四半期ごとに連休設定', '睡眠衛生・運動習慣の啓蒙', '有給取得率の見える化'] } },
+  { key: 'load',
+    label: { employee: '業務のバランスを見直したい', admin: '作業負荷' },
+    sub:   { employee: '業務中の動作多様性 × 休憩間隔', admin: 'Raw-NASA-TLX相当' },
+    dec:   { employee: ['ピーク時間の応援体制', '業務分担の見直し', 'ICTによる省力化'],
+             admin:    ['人員再配置・業務委託の要否', '繁忙平準化の検討', 'マルチタスク負荷の評価'] },
+    act:   { employee: ['応援に来ると「得する」制度', '業務を「みんなで」再配分', 'ルーティン業務の自動化'],
+             admin:    ['ピーク帯の応援シフト', '業務フロー見直しワークショップ', 'アウトソース検討'] } },
+  { key: 'eng',
+    label: { employee: 'チームとのつながりを深めたい', admin: 'ワークエンゲージメント' },
+    sub:   { employee: 'チーム内の動きの同期性', admin: 'UWES 総合相当' },
+    dec:   { employee: ['「ありがとう」の見える化', '社内メンター制度', '学習支援の拡充'],
+             admin:    ['評価制度・等級設計', '人材育成投資の優先度', '離職防止策の効果測定'] },
+    act:   { employee: ['ニックネームで呼び合う文化', '社内カフェテリアプラン', 'みんなで学ぶ読書会'],
+             admin:    ['1on1 月1回定着', '社内公募・FA制度', '評価フィードバック研修'] } },
+];
+
+function renderDecisionRows() {
+  const mode = root.getAttribute('data-mode');
+  const rows = document.getElementById('decisionRows');
+  if (!rows) return;
+  rows.innerHTML = decisionData.map(d => `
+    <div class="am-row">
+      <div>
+        <div class="text-[var(--ink)] text-[16px] font-semibold leading-snug">${d.label[mode]}</div>
+        <div class="text-[13px] text-[var(--ink-3)] mt-1">${d.sub[mode]}</div>
+      </div>
+      <div class="space-y-2 text-[15px] text-[var(--ink-2)] leading-relaxed">
+        ${d.dec[mode].map(t => '<div class="flex items-start gap-2.5"><span class="text-[var(--accent-2)] text-[18px] leading-none mt-1">●</span><span>'+t+'</span></div>').join('')}
+      </div>
+      <div class="space-y-2 text-[15px] text-[var(--ink-2)] leading-relaxed">
+        ${d.act[mode].map(t => '<div class="flex items-start gap-2.5"><span class="text-[var(--warn)] text-[16px] leading-none mt-1">▸</span><span>'+t+'</span></div>').join('')}
+      </div>
+    </div>
+  `).join('');
+}
+renderDecisionRows();
+new MutationObserver(renderDecisionRows).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+
+const heatData = [
+  { dept: 'フロント',      icon: '🛎',  head: 18, vitality: { v: 5.2, l: 'good' },     fatigue: { v: 2.3, l: 'good' },     pres: { v: 15, l: 'good' },     recovery: { v: 68, l: 'good' }, load: { v: 45, l: 'good' },     eng: { v: 4.5, l: 'good' } },
+  { dept: '客室清掃',      icon: '🧹',  head: 32, vitality: { v: 4.1, l: 'warn' },     fatigue: { v: 3.5, l: 'warn' },     pres: { v: 28, l: 'warn' },     recovery: { v: 52, l: 'warn' }, load: { v: 68, l: 'warn' },     eng: { v: 3.8, l: 'good' } },
+  { dept: 'レストラン',    icon: '🍽',  head: 22, vitality: { v: 4.5, l: 'fair' },     fatigue: { v: 3.1, l: 'fair' },     pres: { v: 22, l: 'warn' },     recovery: { v: 58, l: 'fair' }, load: { v: 58, l: 'warn' },     eng: { v: 4.0, l: 'good' } },
+  { dept: '調理',          icon: '🍳',  head: 14, vitality: { v: 4.0, l: 'warn' },     fatigue: { v: 3.8, l: 'risk' },     pres: { v: 31, l: 'risk' },     recovery: { v: 45, l: 'risk' }, load: { v: 72, l: 'risk' },     eng: { v: 3.6, l: 'fair' } },
+  { dept: 'ベル',          icon: '🚪',  head: 8,  vitality: { v: 5.0, l: 'good' },     fatigue: { v: 2.5, l: 'good' },     pres: { v: 17, l: 'good' },     recovery: { v: 72, l: 'good' }, load: { v: 50, l: 'fair' },     eng: { v: 4.3, l: 'good' } },
+  { dept: 'バックオフィス', icon: '💼',  head: 12, vitality: { v: 4.8, l: 'good' },     fatigue: { v: 2.8, l: 'good' },     pres: { v: 19, l: 'good' },     recovery: { v: 65, l: 'good' }, load: { v: 48, l: 'good' },     eng: { v: 4.4, l: 'good' } },
+];
+
+const lvlMap = {
+  good: { color: 'var(--accent)', bg: 'var(--accent-soft)', text: 'var(--accent-2)', labelE: 'うれしい', labelA: '良好' },
+  fair: { color: 'var(--lime)',   bg: '#f0fbe4',            text: '#5d7c2e',         labelE: 'まずまず', labelA: '概ね良好' },
+  warn: { color: 'var(--warn)',   bg: 'var(--warn-soft)',   text: 'var(--warn)',     labelE: 'いたわり', labelA: '注意' },
+  risk: { color: 'var(--risk)',   bg: 'var(--risk-soft)',   text: 'var(--risk)',     labelE: '寄り添う', labelA: '要介入' },
+};
+
+function fmtVal(k, v) {
+  if (k === 'pres' || k === 'recovery') return v + '%';
+  if (k === 'load') return v;
+  return v.toFixed(1);
+}
+
+function renderHeat() {
+  const mode = root.getAttribute('data-mode');
+  const rows = document.getElementById('heat-rows');
+  if (!rows) return;
+  rows.innerHTML = heatData.map(r => `
+    <div class="grid grid-cols-[180px_repeat(6,1fr)] gap-2 items-stretch">
+      <div class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--line-soft)]">
+        <div class="w-9 h-9 rounded-lg bg-[var(--line-soft)] border border-[var(--line)] flex items-center justify-center text-[16px]">${r.icon}</div>
+        <div>
+          <div class="font-semibold text-[var(--ink)] text-[15px]">${r.dept}</div>
+          <div class="text-[12px] text-[var(--ink-3)]">${r.head}名</div>
+        </div>
+      </div>
+      ${['vitality','fatigue','pres','recovery','load','eng'].map(k => {
+        const c = r[k];
+        const L = lvlMap[c.l];
+        const pct = Math.min(100, Math.max(8, (c.v / (k==='pres'||k==='recovery'?100: (k==='vitality'?7:k==='eng'?6:k==='load'?100:5))) * 100));
+        return '<div class="heat-cell relative rounded-xl px-4 py-3.5 cursor-pointer overflow-hidden" style="background:'+L.bg+'; color:'+L.text+';">'
+          + '<div class="absolute inset-0 opacity-25" style="background:linear-gradient(90deg, '+L.color+' '+pct+'%, transparent '+pct+'%);"></div>'
+          + '<div class="relative flex items-center justify-between gap-2">'
+          + '<span class="heat-value num">'+fmtVal(k, c.v)+'</span>'
+          + '<span class="text-[12px] font-medium opacity-90 whitespace-nowrap">'+(mode === 'employee' ? L.labelE : L.labelA)+'</span>'
+          + '</div></div>';
+      }).join('')}
+    </div>
+  `).join('');
+}
+renderHeat();
+new MutationObserver(renderHeat).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+
+const days = Array.from({length: 30}, (_, i) => {
+  const d = new Date(2026, 5, 1 + i);
+  return (d.getMonth()+1) + '/' + d.getDate();
+});
+
+function genSeries(base, amp, weekendBoost) {
+  weekendBoost = weekendBoost || 0;
+  return days.map((_, i) => {
+    const dow = new Date(2026, 5, 1 + i).getDay();
+    const wknd = (dow === 0 || dow === 6) ? weekendBoost : 0;
+    const noise = (Math.sin(i * 1.3) + Math.cos(i * 0.7)) * amp * 0.4;
+    const ramp = i > 20 ? (i - 20) * 0.6 : 0;
+    return Math.round(base + Math.sin(i * 0.42) * amp + noise + wknd + ramp);
+  });
+}
+const vitalityS  = genSeries(58, 8, 6);
+const fatigueS   = genSeries(48, 10, 4);
+const workloadS  = genSeries(56, 9, 8);
+const presS      = genSeries(50, 6, 2);
+const recoveryS  = genSeries(60, 7, 10);
+function clip(a) { return a.map(v => Math.max(8, Math.min(96, v))); }
+
+const labelsByMode = {
+  employee: ['活動充実度', '休息の質', '業務バランス', 'はたらく歓び', '休日回復度'],
+  admin:    ['活力・活気', '疲労感',     '作業負荷',     'プレゼンティーイズム', 'リカバリ'],
+};
+
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+  type: 'line',
+  data: {
+    labels: days,
+    datasets: [
+      { data: clip(vitalityS),  borderColor: '#10b981', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(fatigueS),   borderColor: '#b87355', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(workloadS),  borderColor: '#c89968', tension: .35, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(presS),      borderColor: '#6a8caf', borderDash: [4, 4], tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false },
+      { data: clip(recoveryS),  borderColor: '#14b8a6', tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, fill: false, hidden: true },
+    ],
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#2a2620', padding: 14, cornerRadius: 10,
+        titleFont: { family: 'Outfit', size: 14, weight: '600' },
+        bodyFont: { family: 'Outfit', size: 13 },
+        boxPadding: 6,
+      },
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Outfit', size: 13 }, color: '#64748b', maxRotation: 0, autoSkip: true, autoSkipPadding: 18 } },
+      y: { min: 0, max: 100, grid: { color: 'rgba(15,23,42,0.05)' }, ticks: { font: { family: 'Outfit', size: 13 }, color: '#64748b', stepSize: 25, callback: function(v) { return v + 'pt'; } } },
+    },
+  },
+});
+
+function updateChartLabels(mode) {
+  const ds = trendChart.data.datasets;
+  ds[0].label = labelsByMode[mode][0];
+  ds[1].label = labelsByMode[mode][1];
+  ds[2].label = labelsByMode[mode][2];
+  ds[3].label = labelsByMode[mode][3];
+  ds[4].label = labelsByMode[mode][4];
+  trendChart.update('none');
+}
+updateChartLabels('employee');
+
+const scCtx = document.getElementById('scatterChart').getContext('2d');
+const scatterChart = new Chart(scCtx, {
+  type: 'bubble',
+  data: {
+    datasets: heatData.map(r => ({
+      label: r.dept,
+      data: [{ x: r.vitality.v, y: r.fatigue.v, r: Math.max(10, Math.sqrt(r.head) * 2.4) }],
+      backgroundColor:
+        r.fatigue.l === 'risk' ? 'rgba(184,115,85,0.7)' :
+        r.fatigue.l === 'warn' ? 'rgba(200,153,104,0.7)' :
+        r.fatigue.l === 'fair' ? 'rgba(141,168,104,0.7)' : 'rgba(107,142,111,0.75)',
+      borderColor: '#ffffff',
+      borderWidth: 2,
+    })),
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 12 }, color: '#64748b', boxWidth: 10, boxHeight: 10, padding: 14 } },
+      tooltip: {
+        backgroundColor: '#2a2620', padding: 12, cornerRadius: 10,
+        titleFont: { family: 'Outfit', size: 13, weight: '600' },
+        bodyFont: { family: 'Outfit', size: 13 },
+        callbacks: {
+          label: function(ctx) {
+            const mode = root.getAttribute('data-mode');
+            const xL = mode === 'employee' ? 'いきいき' : '活気';
+            const yL = mode === 'employee' ? 'こころのゆとり' : '疲労';
+            return ctx.dataset.label + ' — ' + xL + ' ' + ctx.raw.x + ' / ' + yL + ' ' + ctx.raw.y;
+          },
+        },
+      },
+    },
+    scales: {
+      x: { min: 3, max: 6, title: { display: true, text: '活力・活気 →', font: { family: 'Outfit', size: 13 }, color: '#64748b' }, grid: { color: 'rgba(15,23,42,0.05)' }, ticks: { font: { family: 'Outfit', size: 12 }, color: '#64748b' } },
+      y: { min: 1.5, max: 4.5, title: { display: true, text: '← 疲労感', font: { family: 'Outfit', size: 13 }, color: '#64748b' }, grid: { color: 'rgba(15,23,42,0.05)' }, ticks: { font: { family: 'Outfit', size: 12 }, color: '#64748b' } },
+    },
+  },
+});
+
+function updateScatterTitles(mode) {
+  const xTitle = mode === 'employee' ? 'いきいき度 →' : '活力・活気 →';
+  const yTitle = mode === 'employee' ? '← こころのゆとり' : '← 疲労感';
+  scatterChart.options.scales.x.title.text = xTitle;
+  scatterChart.options.scales.y.title.text = yTitle;
+  scatterChart.update('none');
+}
+updateScatterTitles('employee');
+
+new MutationObserver(function() {
+  const mode = root.getAttribute('data-mode');
+  updateChartLabels(mode);
+  updateScatterTitles(mode);
+}).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+</script>
+</body>
+</html>
